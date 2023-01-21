@@ -3,7 +3,7 @@ import { type NextPage } from "next";
 import { useRouter } from "next/router";
 
 import { api } from "../utils/api";
-import { useState } from "react";
+import { SyntheticEvent, useState } from "react";
 
 const Home: NextPage = () => {
   const router = useRouter();
@@ -14,6 +14,28 @@ const Home: NextPage = () => {
   });
 
   const [roomInputField, setRoomInputField] = useState<boolean>(false);
+  const [roomId, setRoomId] = useState("");
+  api.room.check.useQuery(
+    { roomId: roomId },
+    {
+      enabled: !!roomId,
+      onSuccess: (data) => {
+        if (data.roomFound) {
+          router.push(`/room/${data.roomId}`).catch((e) => {
+            console.log(e);
+          });
+        }
+      },
+    }
+  );
+
+  function joinARoom(event: SyntheticEvent) {
+    event.preventDefault();
+    const roomId = new FormData(event.currentTarget as HTMLFormElement).get(
+      "roomId"
+    );
+    setRoomId(roomId?.toString() || "");
+  }
   return (
     <>
       <Head>
@@ -46,7 +68,15 @@ const Home: NextPage = () => {
           </div>
           <div className="text-center">
             {roomInputField ? (
-              <input placeholder="room id" className="text-center" />
+              <>
+                <form onSubmit={(event) => joinARoom(event)}>
+                  <input
+                    name="roomId"
+                    placeholder="room id"
+                    className="text-center"
+                  />
+                </form>
+              </>
             ) : (
               <></>
             )}
