@@ -1,9 +1,9 @@
 import Head from "next/head";
 import { type NextPage } from "next";
 import { useRouter } from "next/router";
+import { type SyntheticEvent, useState } from "react";
 
 import { api } from "../utils/api";
-import { SyntheticEvent, useState } from "react";
 
 const Home: NextPage = () => {
   const router = useRouter();
@@ -43,14 +43,14 @@ const Home: NextPage = () => {
         <meta name="description" content="Memewars" />
       </Head>
       <main className="flex min-h-screen flex-col items-center">
-        <h1 className="text-center">Memewars</h1>
+        <h1>Memewars</h1>
         <div className="flex flex-grow flex-col justify-center">
           <div className="text-center">
             <button
               onClick={() => createMutation.mutate()}
               className="rounded bg-black p-4 uppercase text-white"
             >
-              create a game
+              Create a game
             </button>
             {createMutation.isLoading ? (
               <span className="ml-2">Creating...</span>
