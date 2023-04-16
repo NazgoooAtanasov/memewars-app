@@ -1,14 +1,8 @@
 import Head from "next/head";
 import { useState } from "react";
 import type { NextPage } from "next";
-import { useRouter } from "next/router";
 import { io } from "socket.io-client";
-
-enum GAME_STAGE {
-  SELECT_THEME,
-  UPLOAD_IMAGES,
-  VOTE,
-}
+import { useRouter } from "next/router";
 
 type User = {
   id: string;
@@ -16,27 +10,27 @@ type User = {
   roomId: string;
 };
 
-const UploadImages: React.FunctionComponent = () => {
-  return <div className="m-1 basis-3/4  border border-black p-1">board</div>;
-};
-
 const Room: NextPage = () => {
-  const [stage, setStage] = useState<GAME_STAGE>(GAME_STAGE.SELECT_THEME);
   const [players, setPlayers] = useState<User[]>([]);
   const [username, setUsername] = useState("");
   const router = useRouter();
   const id = router.query.id as string;
 
   const joinARoom = () => {
-    const socket = io("http://localhost:3001");
-    socket.on("player_joined", ({ users }: { users: User[] }) => {
-      setPlayers([...users]);
-    });
-    socket.on("join_failed", (data: { reason: string }) => {
-      //
-    });
+    const socket = io("http://localhost:6969");
+
+    socket.on("player_joined", ({ users }: { users: User[] }) =>
+      setPlayers([...users])
+    );
+
+    // @TODO: handle join fail request
+    // @TODO: handle player disconnect
+
     socket.emit("join_request", { roomId: id, username: username });
-    window.addEventListener("popstate", () => socket.disconnect());
+
+    window.addEventListener("popstate", () => socket.disconnect(), {
+      once: true,
+    });
   };
 
   return (
@@ -72,10 +66,6 @@ const Room: NextPage = () => {
                 </div>
               ))}
             </div>
-
-            {stage === GAME_STAGE.SELECT_THEME ? <></> : <></>}
-            {stage === GAME_STAGE.UPLOAD_IMAGES ? <UploadImages /> : <></>}
-            {stage === GAME_STAGE.VOTE ? <></> : <></>}
           </div>
         </div>
       </main>
