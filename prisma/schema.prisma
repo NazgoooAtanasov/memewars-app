@@ -12,7 +12,18 @@ datasource db {
 
 model Room {
     @@map("rooms")
+
     id              String @id  @default(uuid())
     currentPlayers  Int         @default(0)
     maxPlayers      Int         @default(2)
+    users User[]
+}
+
+model User {
+    @@map("users")
+
+    id              String  @id @default(uuid())
+    username        String
+    room            Room    @relation(fields: [roomId], references: [id])
+    roomId          String
 }
