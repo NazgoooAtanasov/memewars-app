@@ -13,18 +13,16 @@ type User = {
 const Room: NextPage = () => {
   const [players, setPlayers] = useState<User[]>([]);
   const [username, setUsername] = useState("");
+  const [error, setError] = useState("");
   const router = useRouter();
   const id = router.query.id as string;
 
   const joinARoom = () => {
     const socket = io("http://localhost:6969");
 
-    socket.on("player_joined", ({ users }: { users: User[] }) =>
-      setPlayers([...users])
-    );
-
-    // @TODO: handle join fail request
-    // @TODO: handle player disconnect
+    socket.on("player_joined", (users: User[]) => setPlayers([...users]));
+    socket.on("player_left", (users: User[]) => setPlayers([...users]));
+    socket.on("join_failed", (reason: string) => setError(reason));
 
     socket.emit("join_request", { roomId: id, username: username });
 
@@ -58,6 +56,7 @@ const Room: NextPage = () => {
               Connect
             </button>
           </div>
+          {!!error ? <div className="p-5 text-center">{error}</div> : <></>}
           <div className="flex flex-grow p-1">
             <div className="m-1 basis-1/4 border border-black p-1">
               {players?.map((player) => (
