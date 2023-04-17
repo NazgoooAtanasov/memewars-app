@@ -14,5 +14,8 @@ const config = {
     locales: ["en"],
     defaultLocale: "en",
   },
+  publicRuntimeConfig: {
+      WS_URL: process.env.WS_URL
+  }
 };
 export default config;
