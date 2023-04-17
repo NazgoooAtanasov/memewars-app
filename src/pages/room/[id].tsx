@@ -1,9 +1,10 @@
 import Head from "next/head";
+import type { FC } from "react";
 import { useState } from "react";
+import getConfig from "next/config";
 import type { NextPage } from "next";
 import { io } from "socket.io-client";
 import { useRouter } from "next/router";
-import getConfig from "next/config";
 
 type User = {
   id: string;
@@ -11,12 +12,53 @@ type User = {
   roomId: string;
 };
 
+enum GAME_STATE {
+  AWAITING_PLAYERS = "awaiting_players",
+  CHOOSE_THEME = "choose_theme",
+}
+
+type GameTheme = {
+  id: string;
+  description: string;
+};
+
+type GameStateEvent =
+  | { state: GAME_STATE.AWAITING_PLAYERS }
+  | { state: GAME_STATE.CHOOSE_THEME; themes: GameTheme[] };
+
+type ChooseThemeArgs = { themes: GameTheme[] };
+const ChooseTheme: FC<ChooseThemeArgs> = ({ themes }) => {
+  return (
+    <div className="flex h-full items-center justify-center italic">
+      {themes.map((theme) => {
+        return (
+          <button className="m-1 border border-black p-1" key={theme.id}>
+            {theme.description}
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
+const AwaitingPlayers: FC = () => {
+  return (
+    <p className="flex h-full items-center justify-center italic">
+      Awaiting players to join...
+    </p>
+  );
+};
+
 const Room: NextPage = () => {
+  const [gameState, setGameState] = useState(GAME_STATE.AWAITING_PLAYERS);
+  const [gameThemes, setGameThemes] = useState<GameTheme[]>([]);
   const [players, setPlayers] = useState<User[]>([]);
   const [username, setUsername] = useState("");
   const [error, setError] = useState("");
   const router = useRouter();
+
   const id = router.query.id as string;
+
   const { publicRuntimeConfig } = getConfig() as {
     publicRuntimeConfig: { WS_URL: string };
   };
@@ -27,6 +69,12 @@ const Room: NextPage = () => {
     socket.on("player_joined", (users: User[]) => setPlayers([...users]));
     socket.on("player_left", (users: User[]) => setPlayers([...users]));
     socket.on("join_failed", (reason: string) => setError(reason));
+    socket.on("room_state_update", (gameStateEvent: GameStateEvent) => {
+      setGameState(gameStateEvent.state);
+      if (gameStateEvent.state === GAME_STATE.CHOOSE_THEME) {
+        setGameThemes(gameStateEvent.themes);
+      }
+    });
 
     socket.emit("join_request", { roomId: id, username: username });
 
@@ -68,6 +116,20 @@ const Room: NextPage = () => {
                   {player.username}
                 </div>
               ))}
+            </div>
+
+            <div className="m-1 basis-3/4 border border-black p-1">
+              {gameState === GAME_STATE.AWAITING_PLAYERS ? (
+                <AwaitingPlayers />
+              ) : (
+                <></>
+              )}
+
+              {gameState === GAME_STATE.CHOOSE_THEME ? (
+                <ChooseTheme themes={gameThemes} />
+              ) : (
+                <></>
+              )}
             </div>
           </div>
         </div>
