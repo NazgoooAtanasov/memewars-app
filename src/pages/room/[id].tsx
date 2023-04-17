@@ -3,6 +3,7 @@ import { useState } from "react";
 import type { NextPage } from "next";
 import { io } from "socket.io-client";
 import { useRouter } from "next/router";
+import getConfig from "next/config";
 
 type User = {
   id: string;
@@ -16,9 +17,12 @@ const Room: NextPage = () => {
   const [error, setError] = useState("");
   const router = useRouter();
   const id = router.query.id as string;
+  const { publicRuntimeConfig } = getConfig() as {
+    publicRuntimeConfig: { WS_URL: string };
+  };
 
   const joinARoom = () => {
-    const socket = io("http://localhost:6969");
+    const socket = io(publicRuntimeConfig.WS_URL);
 
     socket.on("player_joined", (users: User[]) => setPlayers([...users]));
     socket.on("player_left", (users: User[]) => setPlayers([...users]));
